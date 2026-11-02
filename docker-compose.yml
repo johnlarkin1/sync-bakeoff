@@ -1,0 +1,20 @@
+services:
+  postgres:
+    image: postgres:17
+    command: ["postgres", "-c", "wal_level=logical", "-c", "max_replication_slots=10", "-c", "max_wal_senders=10"]
+    environment:
+      POSTGRES_PASSWORD: bakeoff
+      POSTGRES_DB: bakeoff
+    ports: ["54329:5432"]
+    volumes: ["./db/init.sql:/docker-entrypoint-initdb.d/01-init.sql"]
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "postgres"]
+      interval: 2s
+  electric:
+    image: electricsql/electric:1.8.1
+    environment:
+      DATABASE_URL: postgresql://postgres:bakeoff@postgres:5432/bakeoff?sslmode=disable
+      ELECTRIC_INSECURE: "true"
+    ports: ["3010:3000"]
+    depends_on:
+      postgres: { condition: service_healthy }
