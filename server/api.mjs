@@ -6,6 +6,10 @@ import postgres from "postgres";
 import { WebSocketServer } from "ws";
 import { DocumentManager } from "@y-sweet/sdk";
 import * as Y from "yjs";
+import { mustGetQuery } from "@rocicorp/zero";
+import { handleQueryRequest } from "@rocicorp/zero/server";
+import { queries } from "../src/zero/queries.ts";
+import { schema } from "../src/zero/schema.ts";
 
 const sql = postgres("postgres://postgres:bakeoff@localhost:54329/bakeoff", { max: 10 });
 const PORT = Number(process.env.PORT ?? 8787);
@@ -69,6 +73,17 @@ const server = createServer(async (req, res) => {
   res.setHeader("access-control-allow-origin", "*");
   res.setHeader("access-control-allow-headers", "content-type");
   if (req.method === "OPTIONS") return res.end();
+  if (req.url.startsWith("/zero/query")) {
+    // zero-cache resolves synced query names to ZQL here (ZERO_QUERY_URL).
+    let body = "";
+    for await (const c of req) body += c;
+    const out = await handleQueryRequest({
+      handler: (name, args) => mustGetQuery(queries, name).fn({ args, ctx: undefined }),
+      schema, body: JSON.parse(body), userID: "bench", // must match the client userID; no real auth here
+    });
+    res.setHeader("content-type", "application/json");
+    return res.end(JSON.stringify(out));
+  }
   const fn = methods[req.url.slice(1)];
   if (req.method !== "POST" || !fn) return (res.statusCode = 404), res.end();
   let body = "";

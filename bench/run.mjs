@@ -5,7 +5,7 @@ import { mkdirSync, writeFileSync } from "node:fs";
 import { chromium } from "playwright";
 
 const arg = (k, d) => { const i = process.argv.indexOf(`--${k}`); return i === -1 ? d : process.argv[i + 1]; };
-const variants = arg("variants", "query-server,query-client,electric,yrs").split(",");
+const variants = arg("variants", "query-server,query-client,electric,yrs,zero").split(",");
 const throttles = arg("throttle", "1,4").split(",").map(Number);
 const reps = Number(arg("reps", "3"));
 const latency = Number(arg("latency", "0")); // added round-trip ms, via CDP network emulation
@@ -13,6 +13,11 @@ const latency = Number(arg("latency", "0")); // added round-trip ms, via CDP net
 const procs = [
   spawn("npx", ["y-sweet", "serve", "--port", "8090"], { stdio: "ignore", detached: true }),
   spawn("node", ["server/api.mjs"], { stdio: "ignore", detached: true }),
+  spawn("npx", ["zero-cache"], { stdio: "ignore", detached: true, env: { ...process.env,
+    ZERO_UPSTREAM_DB: "postgres://postgres:bakeoff@localhost:54329/bakeoff",
+    ZERO_REPLICA_FILE: "/tmp/sync-bakeoff-zero.db",
+    ZERO_QUERY_URL: "http://localhost:8787/zero/query",
+    ZERO_PORT: "4848", ZERO_ADMIN_PASSWORD: "bakeoff" } }),
   spawn("npx", ["vite", "preview", "--port", "4174", "--strictPort"], { stdio: "ignore", detached: true }),
 ];
 await new Promise((r) => setTimeout(r, 2000));
@@ -21,7 +26,9 @@ const runs = [];
 try {
   for (const throttle of throttles)
     for (const v of variants)
-      for (let rep = 0; rep < reps; rep++) {
+      // rep -1 is an unrecorded warm-up so server-side setup (zero-cache's initial copy, seeding
+      // the yrs doc) isn't charged to the first measured run.
+      for (let rep = -1; rep < reps; rep++) {
         const ctx = await browser.newContext({ viewport: { width: 1440, height: 900 } });
         const page = await ctx.newPage();
         const cdp = await ctx.newCDPSession(page);
@@ -38,12 +45,13 @@ try {
         const res = await page.waitForFunction(() => window.__result, null, { timeout: 180_000 }).then((h) => h.jsonValue());
         await ctx.close();
         const row = { ...res, transferKB: Math.round(bytes / 1024), throttle, latency, rep };
-        runs.push(row);
+        if (rep >= 0) runs.push(row);
         console.log(JSON.stringify(row));
       }
 } finally {
   await browser.close();
-  for (const p of procs) process.kill(-p.pid); // whole group: npx leaves its child running otherwise
+  // Kill whole groups: npx leaves its child server running otherwise.
+  for (const p of procs) try { process.kill(-p.pid); } catch {}
 }
 mkdirSync("results", { recursive: true });
 writeFileSync("results/results.raw.json", JSON.stringify(runs, null, 1));

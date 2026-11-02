@@ -11,6 +11,7 @@
   "dependencies": {
     "@electric-sql/client": "^1.5.28",
     "@electric-sql/react": "^1.0.57",
+    "@rocicorp/zero": "^1.11.3",
     "@tanstack/react-query": "^5.105.1",
     "@tanstack/react-virtual": "^3.14.25",
     "@y-sweet/client": "^0.9.1",

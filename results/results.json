@@ -1,13 +1,13 @@
 [
  {
-  "variant": "yrs",
+  "variant": "zero",
   "throttle": 1,
-  "readyMs": 2841,
-  "filterP50": 17.6,
-  "filterP95": 33.9,
-  "liveP50": 133,
-  "liveMax": 133.7,
-  "heapMB": 93,
-  "transferKB": 16969
+  "readyMs": 16775,
+  "filterP50": 31.8,
+  "filterP95": 34.3,
+  "liveP50": 17.6,
+  "liveMax": 365.2,
+  "heapMB": 38,
+  "transferKB": 17521
  }
 ]

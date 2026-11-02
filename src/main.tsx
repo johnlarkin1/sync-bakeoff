@@ -6,9 +6,12 @@ import { useBids as electric } from "./sources/electric";
 import { useBids as queryClient } from "./sources/queryClient";
 import { useBids as queryServer } from "./sources/queryServer";
 import { useBids as yrs } from "./sources/yrs";
+import { useBids as zero } from "./sources/zero";
+import { ZeroProvider } from "@rocicorp/zero/react";
+import { schema as zeroSchema } from "./zero/schema.ts";
 import { Bid, BidsView, Filter, keyOf, rpc } from "./types";
 
-const SOURCES: Record<string, (f: Filter) => BidsView> = { "query-server": queryServer, "query-client": queryClient, electric, yrs };
+const SOURCES: Record<string, (f: Filter) => BidsView> = { "query-server": queryServer, "query-client": queryClient, electric, yrs, zero };
 const q = new URLSearchParams(location.search);
 const variant = q.get("v") ?? "query-server";
 const useBids = SOURCES[variant];
@@ -113,7 +116,11 @@ async function bench() {
 
 createRoot(document.getElementById("root")!).render(
   <QueryClientProvider client={new QueryClient({ defaultOptions: { queries: { staleTime: 30_000 } } })}>
-    <App />
+    {variant === "zero" ? (
+      <ZeroProvider cacheURL="http://localhost:4848" userID="bench" schema={zeroSchema} kvStore="mem">
+        <App />
+      </ZeroProvider>
+    ) : <App />}
   </QueryClientProvider>,
 );
 if (q.has("run")) bench().catch((e) => ((window as unknown as { __result: unknown }).__result = { variant, error: String(e) }));
