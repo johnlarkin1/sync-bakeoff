@@ -2,34 +2,67 @@
  {
   "variant": "query-server",
   "throttle": 1,
-  "readyMs": 120,
+  "readyMs": 66,
   "filterP50": 16.7,
-  "filterP95": 33.2,
-  "liveP50": 17,
+  "filterP95": 33.4,
+  "liveP50": 32.6,
   "liveMax": 33.4,
   "heapMB": 6,
-  "transferKB": 262
+  "transferKB": 32
  },
  {
   "variant": "query-client",
   "throttle": 1,
-  "readyMs": 258,
-  "filterP50": 16.6,
-  "filterP95": 17.4,
-  "liveP50": 196.8,
-  "liveMax": 203.3,
-  "heapMB": 87,
-  "transferKB": 69899
+  "readyMs": 289,
+  "filterP50": 16.7,
+  "filterP95": 16.8,
+  "liveP50": 246.4,
+  "liveMax": 262.4,
+  "heapMB": 68,
+  "transferKB": 5257
  },
  {
   "variant": "electric",
   "throttle": 1,
-  "readyMs": 473,
+  "readyMs": 432,
   "filterP50": 16.7,
-  "filterP95": 16.8,
-  "liveP50": 24.3,
-  "liveMax": 26.5,
-  "heapMB": 63,
-  "transferKB": 17529
+  "filterP95": 17.5,
+  "liveP50": 21.2,
+  "liveMax": 23.4,
+  "heapMB": 51,
+  "transferKB": 17540
+ },
+ {
+  "variant": "query-server",
+  "throttle": 4,
+  "readyMs": 152,
+  "filterP50": 16.8,
+  "filterP95": 50,
+  "liveP50": 33.2,
+  "liveMax": 33.8,
+  "heapMB": 6,
+  "transferKB": 32
+ },
+ {
+  "variant": "query-client",
+  "throttle": 4,
+  "readyMs": 479,
+  "filterP50": 17.5,
+  "filterP95": 33.7,
+  "liveP50": 411.7,
+  "liveMax": 441.2,
+  "heapMB": 68,
+  "transferKB": 5257
+ },
+ {
+  "variant": "electric",
+  "throttle": 4,
+  "readyMs": 1540,
+  "filterP50": 33.4,
+  "filterP95": 74.7,
+  "liveP50": 107.4,
+  "liveMax": 121.1,
+  "heapMB": 62,
+  "transferKB": 17552
  }
 ]
