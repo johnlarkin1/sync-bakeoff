@@ -8,6 +8,7 @@ const arg = (k, d) => { const i = process.argv.indexOf(`--${k}`); return i === -
 const variants = arg("variants", "query-server,query-client,electric").split(",");
 const throttles = arg("throttle", "1,4").split(",").map(Number);
 const reps = Number(arg("reps", "3"));
+const latency = Number(arg("latency", "0")); // added round-trip ms, via CDP network emulation
 
 const procs = [
   spawn("node", ["server/api.mjs"], { stdio: "ignore" }),
@@ -28,13 +29,14 @@ try {
         let bytes = 0;
         const urls = new Map();
         await cdp.send("Network.enable");
+        if (latency) await cdp.send("Network.emulateNetworkConditions", { offline: false, latency, downloadThroughput: -1, uploadThroughput: -1 });
         cdp.on("Network.requestWillBeSent", (e) => urls.set(e.requestId, e.request.url));
         cdp.on("Network.loadingFinished", (e) => { if (!urls.get(e.requestId)?.includes(":4174")) bytes += e.encodedDataLength; });
         cdp.on("Network.webSocketFrameReceived", (e) => { bytes += e.response.payloadData.length; });
         await page.goto(`http://localhost:4174/?v=${v}&run=1`);
         const res = await page.waitForFunction(() => window.__result, null, { timeout: 180_000 }).then((h) => h.jsonValue());
         await ctx.close();
-        const row = { ...res, transferKB: Math.round(bytes / 1024), throttle, rep };
+        const row = { ...res, transferKB: Math.round(bytes / 1024), throttle, latency, rep };
         runs.push(row);
         console.log(JSON.stringify(row));
       }
@@ -54,6 +56,7 @@ for (const throttle of throttles)
   }
 writeFileSync("results/results.json", JSON.stringify(rows, null, 1));
 writeFileSync("results/results.md", [
+  `Added latency: ${latency} ms per request (CDP emulation; applies to HTTP, not WebSocket frames).`, "",
   "| variant | CPU throttle | first rows ms | filter p50 ms | filter p95 ms | live update p50 ms | live update max ms | heap MB | transfer KB |",
   "| --- | --- | --- | --- | --- | --- | --- | --- | --- |",
   ...rows.map((r) => `| ${r.variant} | ${r.throttle}× | ${keys.map((k) => r[k]).join(" | ")} |`),

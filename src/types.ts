@@ -36,7 +36,20 @@ export function applyFilter(all: Bid[], f: Filter): { rows: Bid[]; total: number
   const hit = all.filter((b) =>
     (!f.status || b.status === f.status) && (!f.trade || b.trade === f.trade) &&
     (!q || b.name.toLowerCase().includes(q) || b.gc.toLowerCase().includes(q)));
-  return { rows: hit.slice(0, PAGE), total: hit.length };
+  return { rows: topK(hit, PAGE), total: hit.length };
+}
+
+// First k by date desc without sorting the whole list (input order does not matter).
+function topK(xs: Bid[], k: number): Bid[] {
+  const out: Bid[] = [];
+  for (const b of xs) {
+    if (out.length === k && byDateDesc(b, out[k - 1]) >= 0) continue;
+    let i = out.length;
+    while (i > 0 && byDateDesc(b, out[i - 1]) < 0) i--;
+    out.splice(i, 0, b);
+    if (out.length > k) out.pop();
+  }
+  return out;
 }
 
 export const byDateDesc = (a: Bid, b: Bid) => (a.bid_date < b.bid_date ? 1 : a.bid_date > b.bid_date ? -1 : a.id < b.id ? -1 : 1);
