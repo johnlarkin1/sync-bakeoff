@@ -1,6 +1,7 @@
 // Connect-style JSON API (POST /<service>/<method>) plus an /rt WebSocket that pushes
 // invalidations, standing in for main-backend + realtime-events in the web app RFC.
 import { createServer } from "node:http";
+import { gzipSync } from "node:zlib";
 import postgres from "postgres";
 import { WebSocketServer } from "ws";
 
@@ -49,7 +50,13 @@ const server = createServer(async (req, res) => {
   try {
     const out = await fn(JSON.parse(body || "{}"));
     res.setHeader("content-type", "application/json");
-    res.end(JSON.stringify(out));
+    // Connect servers gzip when the client accepts it; match that so byte counts are fair.
+    const json = JSON.stringify(out);
+    if (/gzip/.test(req.headers["accept-encoding"] ?? "") && json.length > 1024) {
+      res.setHeader("content-encoding", "gzip");
+      return res.end(gzipSync(json));
+    }
+    res.end(json);
   } catch (e) {
     res.statusCode = 500;
     res.end(JSON.stringify({ code: "internal", message: String(e) }));
