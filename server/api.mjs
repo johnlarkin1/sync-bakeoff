@@ -60,6 +60,7 @@ const methods = {
   "bids.v1.BidService/ListAllBids": async ({ company_id }) => ({
     bids: await sql`SELECT ${COLS} FROM bids WHERE company_id = ${company_id} ORDER BY bid_date DESC, id`,
   }),
+  "bids.v1.BidService/GetBid": async ({ id }) => ({ bid: (await sql`SELECT ${COLS} FROM bids WHERE id = ${id}`)[0] }),
   "bids.v1.BidService/UpdateBid": async ({ id, name, status }) => {
     const [row] = await sql`UPDATE bids SET name = coalesce(${name ?? null}, name), status = coalesce(${status ?? null}, status),
       updated_at = now() WHERE id = ${id} RETURNING ${COLS}`;
@@ -71,7 +72,7 @@ const methods = {
 
 const server = createServer(async (req, res) => {
   res.setHeader("access-control-allow-origin", "*");
-  res.setHeader("access-control-allow-headers", "content-type");
+  res.setHeader("access-control-allow-headers", "content-type, authorization, x-replicache-requestid");
   if (req.method === "OPTIONS") return res.end();
   if (req.url.startsWith("/zero/query")) {
     // zero-cache resolves synced query names to ZQL here (ZERO_QUERY_URL).
@@ -83,6 +84,24 @@ const server = createServer(async (req, res) => {
     });
     res.setHeader("content-type", "application/json");
     return res.end(JSON.stringify(out));
+  }
+  if (req.url.startsWith("/replicache/pull")) {
+    // Replicache pull, global-version strategy: the cookie is the newest updated_at (epoch µs)
+    // the client has; first pull clears and sends the tenant's rows, later pulls send changes.
+    let body = "";
+    for await (const c of req) body += c;
+    const { cookie } = JSON.parse(body);
+    const rows = cookie == null
+      ? await sql`SELECT ${COLS}, (extract(epoch from updated_at) * 1e6)::bigint::text AS v FROM bids WHERE company_id = 'co_demo'`
+      : await sql`SELECT ${COLS}, (extract(epoch from updated_at) * 1e6)::bigint::text AS v FROM bids
+          WHERE company_id = 'co_demo' AND updated_at > to_timestamp(${cookie} / 1e6)`;
+    const next = rows.reduce((m, r) => Math.max(m, Number(r.v)), cookie ?? 0);
+    const patch = rows.map(({ v, ...r }) => ({ op: "put", key: `bid/${r.id}`, value: { ...r, updated_at: String(r.updated_at) } }));
+    if (cookie == null) patch.unshift({ op: "clear" });
+    const json = JSON.stringify({ cookie: next, lastMutationIDChanges: {}, patch });
+    res.setHeader("content-type", "application/json");
+    if (/gzip/.test(req.headers["accept-encoding"] ?? "")) { res.setHeader("content-encoding", "gzip"); return res.end(gzipSync(json)); }
+    return res.end(json);
   }
   const fn = methods[req.url.slice(1)];
   if (req.method !== "POST" || !fn) return (res.statusCode = 404), res.end();

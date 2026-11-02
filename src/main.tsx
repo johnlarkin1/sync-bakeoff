@@ -7,11 +7,13 @@ import { useBids as queryClient } from "./sources/queryClient";
 import { useBids as queryServer } from "./sources/queryServer";
 import { useBids as yrs } from "./sources/yrs";
 import { useBids as zero } from "./sources/zero";
+import { useBids as replicache } from "./sources/replicache";
+import { useBids as livestore } from "./sources/livestore";
 import { ZeroProvider } from "@rocicorp/zero/react";
 import { schema as zeroSchema } from "./zero/schema.ts";
 import { Bid, BidsView, Filter, keyOf, rpc } from "./types";
 
-const SOURCES: Record<string, (f: Filter) => BidsView> = { "query-server": queryServer, "query-client": queryClient, electric, yrs, zero };
+const SOURCES: Record<string, (f: Filter) => BidsView> = { "query-server": queryServer, "query-client": queryClient, electric, yrs, zero, replicache, livestore };
 const q = new URLSearchParams(location.search);
 const variant = q.get("v") ?? "query-server";
 const useBids = SOURCES[variant];

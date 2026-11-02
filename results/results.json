@@ -1,13 +1,13 @@
 [
  {
-  "variant": "zero",
+  "variant": "replicache",
   "throttle": 1,
-  "readyMs": 16775,
-  "filterP50": 31.8,
-  "filterP95": 34.3,
-  "liveP50": 17.6,
-  "liveMax": 365.2,
-  "heapMB": 38,
-  "transferKB": 17521
+  "readyMs": 622,
+  "filterP50": 16.6,
+  "filterP95": 18.7,
+  "liveP50": 116.7,
+  "liveMax": 118.5,
+  "heapMB": 49,
+  "transferKB": 1150
  }
 ]
