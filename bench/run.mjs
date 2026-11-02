@@ -42,7 +42,9 @@ try {
         cdp.on("Network.loadingFinished", (e) => { if (!urls.get(e.requestId)?.includes(":4174")) bytes += e.encodedDataLength; });
         cdp.on("Network.webSocketFrameReceived", (e) => { bytes += e.response.payloadData.length; });
         await page.goto(`http://localhost:4174/?v=${v}&run=1`);
-        const res = await page.waitForFunction(() => window.__result, null, { timeout: 180_000 }).then((h) => h.jsonValue());
+        const res = await page.waitForFunction(() => window.__result, null, { timeout: 180_000 })
+          .then((h) => h.jsonValue())
+          .catch((e) => ({ variant: v, error: String(e).split("\n")[0] }));
         await ctx.close();
         const row = { ...res, transferKB: Math.round(bytes / 1024), throttle, latency, rep };
         if (rep >= 0) runs.push(row);
