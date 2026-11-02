@@ -1,68 +1,13 @@
 [
  {
-  "variant": "query-server",
+  "variant": "yrs",
   "throttle": 1,
-  "readyMs": 290,
-  "filterP50": 16.9,
-  "filterP95": 100,
-  "liveP50": 100,
-  "liveMax": 100.4,
-  "heapMB": 6,
-  "transferKB": 32
- },
- {
-  "variant": "query-client",
-  "throttle": 1,
-  "readyMs": 442,
-  "filterP50": 16.7,
-  "filterP95": 16.8,
-  "liveP50": 249.5,
-  "liveMax": 283.3,
-  "heapMB": 48,
-  "transferKB": 5257
- },
- {
-  "variant": "electric",
-  "throttle": 1,
-  "readyMs": 640,
-  "filterP50": 16.7,
-  "filterP95": 17.1,
-  "liveP50": 83.9,
-  "liveMax": 86,
-  "heapMB": 32,
-  "transferKB": 17566
- },
- {
-  "variant": "query-server",
-  "throttle": 4,
-  "readyMs": 385,
-  "filterP50": 16.9,
-  "filterP95": 116.8,
-  "liveP50": 99.9,
-  "liveMax": 101.1,
-  "heapMB": 6,
-  "transferKB": 32
- },
- {
-  "variant": "query-client",
-  "throttle": 4,
-  "readyMs": 744,
-  "filterP50": 27.8,
-  "filterP95": 36.7,
-  "liveP50": 487.2,
-  "liveMax": 519.2,
-  "heapMB": 48,
-  "transferKB": 5257
- },
- {
-  "variant": "electric",
-  "throttle": 4,
-  "readyMs": 1701,
-  "filterP50": 31.5,
-  "filterP95": 45.5,
-  "liveP50": 86.9,
-  "liveMax": 101.5,
-  "heapMB": 47,
-  "transferKB": 17578
+  "readyMs": 2841,
+  "filterP50": 17.6,
+  "filterP95": 33.9,
+  "liveP50": 133,
+  "liveMax": 133.7,
+  "heapMB": 93,
+  "transferKB": 16969
  }
 ]

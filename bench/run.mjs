@@ -5,14 +5,15 @@ import { mkdirSync, writeFileSync } from "node:fs";
 import { chromium } from "playwright";
 
 const arg = (k, d) => { const i = process.argv.indexOf(`--${k}`); return i === -1 ? d : process.argv[i + 1]; };
-const variants = arg("variants", "query-server,query-client,electric").split(",");
+const variants = arg("variants", "query-server,query-client,electric,yrs").split(",");
 const throttles = arg("throttle", "1,4").split(",").map(Number);
 const reps = Number(arg("reps", "3"));
 const latency = Number(arg("latency", "0")); // added round-trip ms, via CDP network emulation
 
 const procs = [
-  spawn("node", ["server/api.mjs"], { stdio: "ignore" }),
-  spawn("npx", ["vite", "preview", "--port", "4174", "--strictPort"], { stdio: "ignore" }),
+  spawn("npx", ["y-sweet", "serve", "--port", "8090"], { stdio: "ignore", detached: true }),
+  spawn("node", ["server/api.mjs"], { stdio: "ignore", detached: true }),
+  spawn("npx", ["vite", "preview", "--port", "4174", "--strictPort"], { stdio: "ignore", detached: true }),
 ];
 await new Promise((r) => setTimeout(r, 2000));
 const browser = await chromium.launch({ channel: "chrome" });
@@ -42,7 +43,7 @@ try {
       }
 } finally {
   await browser.close();
-  for (const p of procs) p.kill();
+  for (const p of procs) process.kill(-p.pid); // whole group: npx leaves its child running otherwise
 }
 mkdirSync("results", { recursive: true });
 writeFileSync("results/results.raw.json", JSON.stringify(runs, null, 1));

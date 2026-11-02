@@ -5,9 +5,10 @@ import { createRoot } from "react-dom/client";
 import { useBids as electric } from "./sources/electric";
 import { useBids as queryClient } from "./sources/queryClient";
 import { useBids as queryServer } from "./sources/queryServer";
+import { useBids as yrs } from "./sources/yrs";
 import { Bid, BidsView, Filter, keyOf, rpc } from "./types";
 
-const SOURCES: Record<string, (f: Filter) => BidsView> = { "query-server": queryServer, "query-client": queryClient, electric };
+const SOURCES: Record<string, (f: Filter) => BidsView> = { "query-server": queryServer, "query-client": queryClient, electric, yrs };
 const q = new URLSearchParams(location.search);
 const variant = q.get("v") ?? "query-server";
 const useBids = SOURCES[variant];

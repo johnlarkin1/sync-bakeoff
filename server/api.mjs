@@ -4,6 +4,8 @@ import { createServer } from "node:http";
 import { gzipSync } from "node:zlib";
 import postgres from "postgres";
 import { WebSocketServer } from "ws";
+import { DocumentManager } from "@y-sweet/sdk";
+import * as Y from "yjs";
 
 const sql = postgres("postgres://postgres:bakeoff@localhost:54329/bakeoff", { max: 10 });
 const PORT = Number(process.env.PORT ?? 8787);
@@ -17,7 +19,30 @@ function where(company, f = {}) {
   return parts.reduce((a, p, i) => (i ? sql`${a} AND ${p}` : p));
 }
 
+// yrs variant: the tenant's bids live in one Yjs doc on a y-sweet (yrs) server. The API keeps a
+// mirror doc so a write here becomes a Yjs update pushed to the server, like an agent edit would.
+const YSWEET = process.env.YSWEET ?? "ys://127.0.0.1:8090";
+const DOC_ID = "bids-co_demo";
+let yrs = null;
+async function yrsDoc() {
+  if (yrs) return yrs;
+  const manager = new DocumentManager(YSWEET);
+  const mirror = new Y.Doc();
+  const bids = mirror.getMap("bids");
+  const rows = await sql`SELECT ${COLS} FROM bids WHERE company_id = 'co_demo'`;
+  await manager.createDoc(DOC_ID).catch(() => {});
+  // y-sweet caps one update's size, so seed in chunks of 2,000 bids.
+  for (let i = 0; i < rows.length; i += 2000) {
+    const before = Y.encodeStateVector(mirror);
+    mirror.transact(() => { for (const r of rows.slice(i, i + 2000)) bids.set(r.id, { ...r, updated_at: String(r.updated_at) }); });
+    await manager.updateDoc(DOC_ID, Y.encodeStateAsUpdate(mirror, before));
+  }
+  mirror.on("update", (u) => manager.updateDoc(DOC_ID, u));
+  return (yrs = { manager, bids });
+}
+
 const methods = {
+  "yrs.v1.YrsService/GetToken": async () => (await yrsDoc()).manager.getOrCreateDocAndToken(DOC_ID),
   // Server-side filter + sort, first page only (what the UI shows above the fold).
   "bids.v1.BidService/ListBids": async ({ company_id, filter, limit = 100 }) => {
     const w = where(company_id, filter);
@@ -35,6 +60,7 @@ const methods = {
     const [row] = await sql`UPDATE bids SET name = coalesce(${name ?? null}, name), status = coalesce(${status ?? null}, status),
       updated_at = now() WHERE id = ${id} RETURNING ${COLS}`;
     broadcast({ type: "bid.updated", company_id: row.company_id, id, version: row.updated_at });
+    if (yrs) yrs.bids.set(id, { ...row, updated_at: String(row.updated_at) });
     return { bid: row };
   },
 };
