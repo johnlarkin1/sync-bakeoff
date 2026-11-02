@@ -1,0 +1,18 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>sync-bakeoff</title>
+    <style>
+      body { margin: 0; font: 13px system-ui, sans-serif; }
+      .bar { display: flex; gap: 8px; padding: 8px; border-bottom: 1px solid #ddd; align-items: center; }
+      .row { display: grid; grid-template-columns: 110px 1fr 140px 100px 90px 90px 100px 110px; padding: 0 8px; height: 28px; align-items: center; border-bottom: 1px solid #f0f0f0; white-space: nowrap; overflow: hidden; }
+      #hud { position: fixed; bottom: 8px; right: 8px; background: #000c; color: #fff; padding: 6px 8px; white-space: pre; border-radius: 4px; max-width: 50vw; }
+    </style>
+  </head>
+  <body>
+    <div id="root"></div>
+    <div id="hud"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

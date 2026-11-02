@@ -1,0 +1,35 @@
+[
+ {
+  "variant": "query-server",
+  "throttle": 1,
+  "readyMs": 120,
+  "filterP50": 16.7,
+  "filterP95": 33.2,
+  "liveP50": 17,
+  "liveMax": 33.4,
+  "heapMB": 6,
+  "transferKB": 262
+ },
+ {
+  "variant": "query-client",
+  "throttle": 1,
+  "readyMs": 258,
+  "filterP50": 16.6,
+  "filterP95": 17.4,
+  "liveP50": 196.8,
+  "liveMax": 203.3,
+  "heapMB": 87,
+  "transferKB": 69899
+ },
+ {
+  "variant": "electric",
+  "throttle": 1,
+  "readyMs": 473,
+  "filterP50": 16.7,
+  "filterP95": 16.8,
+  "liveP50": 24.3,
+  "liveMax": 26.5,
+  "heapMB": 63,
+  "transferKB": 17529
+ }
+]
